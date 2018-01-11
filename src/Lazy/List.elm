@@ -287,8 +287,8 @@ takeWhile predicate list =
 -}
 drop : Int -> LazyList a -> LazyList a
 drop n list =
-    lazy <|
-        \() ->
+    let
+        dropHelper n list =
             if n <= 0 then
                 force list
             else
@@ -297,7 +297,11 @@ drop n list =
                         Nil
 
                     Cons first rest ->
-                        force (drop (n - 1) rest)
+                        dropHelper (n - 1) rest
+    in
+    lazy <|
+        \() ->
+            dropHelper n list
 
 
 {-| Drop elements from a list as long as the predicate is satisfied.
