@@ -1,7 +1,7 @@
 module Example exposing (..)
 
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, list, int, string)
+import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import Test exposing (..)
 import Lazy.List exposing (..)
 
@@ -28,5 +28,13 @@ suite =
                     |> cons 6
                     |> sum
                     |> Expect.equal 16
+            )
+        , fuzz (intRange 0 4000)
+            "Drop should drop exactly n elements"
+            (\n ->
+                numbers
+                    |> drop n
+                    |> head
+                    |> Expect.equal (Just (n + 1))
             )
         ]
