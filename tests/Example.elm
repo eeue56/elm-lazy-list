@@ -37,4 +37,21 @@ suite =
                     |> head
                     |> Expect.equal (Just (n + 1))
             )
+        , describe "dropWhile"
+            [ fuzz (intRange 1 4000)
+                "should drop all elements that match the predicate"
+                (\n ->
+                    numbers
+                        |> dropWhile (\x -> x < n)
+                        |> head
+                        |> Expect.equal (Just n)
+                )
+            , test "should not overflow the stack"
+                (\_ ->
+                    numbers
+                        |> dropWhile (\x -> x < 10000)
+                        |> head
+                        |> Expect.equal (Just 10000)
+                )
+            ]
         ]
