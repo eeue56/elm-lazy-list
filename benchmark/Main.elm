@@ -13,6 +13,11 @@ suite =
                 numbers
                     |> drop 500
                     |> head
+        , benchmark "dropWhile" <|
+            \_ ->
+                numbers
+                    |> dropWhile (\x -> x < 500)
+                    |> head
         ]
 
 
