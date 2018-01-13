@@ -308,17 +308,21 @@ drop n list =
 -}
 dropWhile : (a -> Bool) -> LazyList a -> LazyList a
 dropWhile predicate list =
-    lazy <|
-        \() ->
+    let
+        dropHelper list =
             case force list of
                 Nil ->
                     Nil
 
                 Cons first rest ->
                     if predicate first then
-                        force (dropWhile predicate rest)
+                        dropHelper rest
                     else
-                        force list
+                        Cons first rest
+    in
+    lazy <|
+        \() ->
+            dropHelper list
 
 
 {-| Test if a value is a member of a list.
