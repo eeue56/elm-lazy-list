@@ -18,6 +18,12 @@ suite =
                 numbers
                     |> dropWhile (\x -> x < 500)
                     |> head
+        , benchmark "unique" <|
+            \_ ->
+                repeat 5
+                    |> take 500
+                    |> unique
+                    |> head
         ]
 
 
