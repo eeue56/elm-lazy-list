@@ -54,4 +54,22 @@ suite =
                         |> Expect.equal (Just 10000)
                 )
             ]
+        , describe "unique"
+            [ test "should drop all non-uniqe elements"
+                (\_ ->
+                    interleave numbers numbers
+                        |> take (2 * 500)
+                        |> unique
+                        |> length
+                        |> Expect.equal 500
+                )
+            , test "should not overflow the stack"
+                (\_ ->
+                    repeat 5
+                        |> take 10000
+                        |> unique
+                        |> head
+                        |> Expect.equal (Just 5)
+                )
+            ]
         ]
