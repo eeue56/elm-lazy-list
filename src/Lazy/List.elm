@@ -350,17 +350,21 @@ length =
 -}
 unique : LazyList a -> LazyList a
 unique list =
-    lazy <|
-        \() ->
+    let
+        uniqueHelper list =
             case force list of
                 Nil ->
                     Nil
 
                 Cons first rest ->
                     if member first rest then
-                        force (unique rest)
+                        uniqueHelper rest
                     else
                         Cons first (unique rest)
+    in
+    lazy <|
+        \() ->
+            uniqueHelper list
 
 
 {-| Keep all elements in a list that satisfy the given predicate.
