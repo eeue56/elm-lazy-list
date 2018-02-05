@@ -700,12 +700,17 @@ product5 list1 list2 list3 list4 list5 =
 -}
 toList : LazyList a -> List a
 toList list =
-    case force list of
-        Nil ->
-            []
+    let
+        toReverseList list accumulator =
+            case force list of
+                Nil ->
+                    accumulator
 
-        Cons first rest ->
-            first :: toList rest
+                Cons first rest ->
+                    toReverseList rest (first :: accumulator)
+    in
+    toReverseList list []
+        |> List.reverse
 
 
 {-| Convert a normal list to a lazy list.
