@@ -2,54 +2,80 @@ module Lazy.List exposing (..)
 
 {-| Lazy list implementation in Elm.
 
+
 # Types
+
 @docs LazyList, LazyListView
 
+
 # Constructors
+
 @docs cons, empty, singleton
 
+
 # Query operations
+
 @docs isEmpty, head, tail, headAndTail, member, length
 
+
 # Conversions
+
 @docs toList, fromList, toArray, fromArray
 
+
 # Map-reduce et al.
+
 @docs map, zip, reduce, flatten, append, foldl, foldr
 
+
 # Common operations
+
 @docs intersperse, interleave, reverse, cycle, iterate, repeat, take, takeWhile, drop, dropWhile
 
+
 # Filtering operations
+
 @docs keepIf, dropIf, filterMap, unique
 
+
 # Chaining operations
+
 @docs andMap, andThen
 
+
 # Useful math stuff
+
 @docs numbers, sum, product
 
+
 # All the maps!
+
 @docs map2, map3, map4, map5
 
+
 # All the zips!
+
 @docs zip3, zip4, zip5
 
+
 # All the Cartesian products!
+
 **Warning:** Calling these functions on large lists and then calling `toList` can easily overflow the stack. Consider
 passing the results to `take aConstantNumber`.
 
 @docs product2, product3, product4, product5
 
+
 # Infix Operators
+
 @docs (:::), (+++)
 
 -}
 
 import Array exposing (Array)
+import Lazy exposing (Lazy, force, lazy)
 import List
 import Random exposing (Generator, Seed)
-import Lazy exposing (Lazy, lazy, force)
 
 
 {-| Analogous to `List` type. This is the actual implementation type for the
@@ -230,6 +256,7 @@ cycle list =
 Equivalent to:
 
     x ::: f x ::: f (f x) ::: f (f (f x)) ::: ... -- etc...
+
 -}
 iterate : (a -> a) -> a -> LazyList a
 iterate f a =
@@ -243,6 +270,7 @@ iterate f a =
 i.e.:
 
     1 ::: 2 ::: 3 ::: 4 ::: 5 ::: ... -- etc...
+
 -}
 numbers : LazyList number
 numbers =
@@ -340,6 +368,7 @@ member a list =
 {-| Get the length of a lazy list.
 
 Warning: This will not terminate if the list is infinite.
+
 -}
 length : LazyList a -> Int
 length =
@@ -414,7 +443,8 @@ filterMap transform list =
 {-| Reduce a list with a given reducer and an initial value.
 
 Example :
-    reduce (+) 0 (1 ::: 2 ::: 3 ::: 4 ::: empty) == 10
+reduce (+) 0 (1 ::: 2 ::: 3 ::: 4 ::: empty) == 10
+
 -}
 reduce : (a -> b -> b) -> b -> LazyList a -> b
 reduce reducer b list =
@@ -519,6 +549,7 @@ map2 f list1 list2 =
 where then number of arguments are greater than 5.
 
 The argument order is such that it works well with `|>` chains.
+
 -}
 andMap : LazyList a -> LazyList (a -> b) -> LazyList b
 andMap listVal listFuncs =
