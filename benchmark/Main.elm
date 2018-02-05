@@ -24,6 +24,11 @@ suite =
                     |> take 500
                     |> unique
                     |> head
+        , benchmark "toList" <|
+            \_ ->
+                numbers
+                    |> take 500
+                    |> toList
         ]
 
 
