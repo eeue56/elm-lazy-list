@@ -29,6 +29,14 @@ suite =
                     |> sum
                     |> Expect.equal 16
             )
+        , test "toList should not overflow the stack"
+            (\_ ->
+                Lazy.List.numbers
+                    |> Lazy.List.take 100000
+                    |> Lazy.List.toList
+                    |> List.length
+                    |> Expect.equal 100000
+            )
         , fuzz (intRange 0 4000)
             "Drop should drop exactly n elements"
             (\n ->
