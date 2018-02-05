@@ -2,8 +2,8 @@ module Example exposing (..)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, intRange, list, string)
-import Test exposing (..)
 import Lazy.List exposing (..)
+import Test exposing (..)
 
 
 suite : Test
