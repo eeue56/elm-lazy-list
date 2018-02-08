@@ -734,12 +734,7 @@ product5 list1 list2 list3 list4 list5 =
 -}
 toList : LazyList a -> List a
 toList list =
-    case force list of
-        Nil ->
-            []
-
-        Cons first rest ->
-            first :: toList rest
+    foldr (::) [] list
 
 
 {-| Convert a normal list to a lazy list.
