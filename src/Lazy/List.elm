@@ -362,7 +362,10 @@ member a list =
             False
 
         Cons first rest ->
-            first == a || member a rest
+            if first == a then
+                True
+            else
+                member a rest
 
 
 {-| Get the length of a lazy list.
