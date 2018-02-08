@@ -362,7 +362,10 @@ member a list =
             False
 
         Cons first rest ->
-            first == a || member a rest
+            if first == a then
+                True
+            else
+                member a rest
 
 
 {-| Get the length of a lazy list.
@@ -467,7 +470,7 @@ foldl =
 -}
 foldr : (a -> b -> b) -> b -> LazyList a -> b
 foldr reducer b list =
-    Array.foldr reducer b (toArray list)
+    List.foldl reducer b <| foldl (::) [] list
 
 
 {-| Get the sum of a list of numbers.
@@ -731,12 +734,7 @@ product5 list1 list2 list3 list4 list5 =
 -}
 toList : LazyList a -> List a
 toList list =
-    case force list of
-        Nil ->
-            []
-
-        Cons first rest ->
-            first :: toList rest
+    foldr (::) [] list
 
 
 {-| Convert a normal list to a lazy list.
@@ -750,12 +748,7 @@ fromList =
 -}
 toArray : LazyList a -> Array a
 toArray list =
-    case force list of
-        Nil ->
-            Array.empty
-
-        Cons first rest ->
-            Array.append (Array.push first Array.empty) (toArray rest)
+    foldl Array.push Array.empty list
 
 
 {-| Convert an array to a lazy list.

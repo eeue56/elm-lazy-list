@@ -1,5 +1,6 @@
 module Example exposing (..)
 
+import Array
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, intRange, list, string)
 import Lazy.List exposing (..)
@@ -71,5 +72,85 @@ suite =
                         |> head
                         |> Expect.equal (Just 5)
                 )
+            ]
+        , describe "toArray"
+            [ test "should correctly convert a list" <|
+                let
+                    reference =
+                        Array.fromList <| List.range 1 10
+
+                    input =
+                        fromArray reference
+                in
+                \_ ->
+                    input
+                        |> toArray
+                        |> Expect.equal reference
+            , test "should not overflow the stack" <|
+                \_ ->
+                    repeat 5
+                        |> take 10000
+                        |> toArray
+                        |> always Expect.pass
+            ]
+        , describe "toList"
+            [ test "should correctly convert a list" <|
+                let
+                    reference =
+                        List.range 1 10
+
+                    input =
+                        fromList reference
+                in
+                \_ ->
+                    input
+                        |> toList
+                        |> Expect.equal reference
+            , test "should not overflow the stack" <|
+                \_ ->
+                    repeat 5
+                        |> take 100000
+                        |> toList
+                        |> always Expect.pass
+            ]
+        , describe "foldr"
+            [ test "should fold in the right direction" <|
+                let
+                    reference =
+                        List.range 1 10
+
+                    input =
+                        fromList reference
+                in
+                \_ ->
+                    input
+                        |> foldr (::) []
+                        |> Expect.equal reference
+            , test "should not overflow the stack" <|
+                \_ ->
+                    repeat 5
+                        |> take 10000
+                        |> foldr (+) 0
+                        |> always Expect.pass
+            ]
+        , describe "member"
+            [ test "should find a value in a list" <|
+                \_ ->
+                    numbers
+                        |> take 5
+                        |> member 3
+                        |> Expect.equal True
+            , test "should not find a value that is not in the list" <|
+                \_ ->
+                    numbers
+                        |> take 5
+                        |> member 10
+                        |> Expect.equal False
+            , test "should not overflow the stack" <|
+                \_ ->
+                    numbers
+                        |> take 10000
+                        |> member -1
+                        |> always Expect.pass
             ]
         ]
