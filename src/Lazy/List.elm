@@ -470,7 +470,7 @@ foldl =
 -}
 foldr : (a -> b -> b) -> b -> LazyList a -> b
 foldr reducer b list =
-    Array.foldr reducer b (toArray list)
+    List.foldl reducer b <| foldl (::) [] list
 
 
 {-| Get the sum of a list of numbers.
