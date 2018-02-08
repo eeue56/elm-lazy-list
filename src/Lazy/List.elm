@@ -753,12 +753,7 @@ fromList =
 -}
 toArray : LazyList a -> Array a
 toArray list =
-    case force list of
-        Nil ->
-            Array.empty
-
-        Cons first rest ->
-            Array.append (Array.push first Array.empty) (toArray rest)
+    foldl Array.push Array.empty list
 
 
 {-| Convert an array to a lazy list.
