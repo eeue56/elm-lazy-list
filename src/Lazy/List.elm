@@ -65,11 +65,6 @@ passing the results to `take aConstantNumber`.
 
 @docs product2, product3, product4, product5
 
-
-# Infix Operators
-
-@docs (:::), (+++)
-
 -}
 
 import Array exposing (Array)
@@ -191,7 +186,7 @@ append list1 list2 =
                     force list2
 
                 Cons first rest ->
-                    force (first ::: rest +++ list2)
+                    Cons first (append rest list2)
 
 
 {-| Interleave the elements of a list in another list. The two lists get
@@ -211,7 +206,10 @@ interleave list1 list2 =
                             force list1
 
                         Cons first2 rest2 ->
-                            force (first1 ::: first2 ::: interleave rest1 rest2)
+                            interleave rest1 rest2
+                                |> cons first2
+                                |> cons first1
+                                |> force
 
 
 {-| Places the given value between all members of the given list.
@@ -227,15 +225,24 @@ intersperse a list =
                 Cons first rest ->
                     case force rest of
                         Nil ->
-                            force (first ::: empty)
+                            Cons first empty
 
                         Cons second tail ->
                             case force tail of
                                 Nil ->
-                                    force (first ::: a ::: second ::: empty)
+                                    empty
+                                        |> cons second
+                                        |> cons a
+                                        |> cons first
+                                        |> force
 
                                 _ ->
-                                    force (first ::: a ::: second ::: a ::: intersperse a tail)
+                                    intersperse a tail
+                                        |> cons a
+                                        |> cons second
+                                        |> cons a
+                                        |> cons first
+                                        |> force
 
 
 {-| Take a list and repeat it ad infinitum. This cycles a finite list
@@ -244,11 +251,10 @@ the case of an infinite list.
 -}
 cycle : LazyList a -> LazyList a
 cycle list =
-    list
-        +++ (lazy <|
-                \() ->
-                    force (cycle list)
-            )
+    append list <|
+        lazy <|
+            \() ->
+                force (cycle list)
 
 
 {-| Create an infinite list of applications of a function on some value.
@@ -496,7 +502,7 @@ flatten list =
                     Nil
 
                 Cons first rest ->
-                    force (first +++ flatten rest)
+                    force (append first <| flatten rest)
 
 
 {-| Chain list producing operations. Map then flatten.
@@ -682,7 +688,13 @@ product2 list1 list2 =
                             Nil
 
                         Cons _ _ ->
-                            force <| map ((,) first1) list2 +++ product2 rest1 list2
+                            force <|
+                                append
+                                    (map
+                                        ((,) first1)
+                                        list2
+                                    )
+                                    (product2 rest1 list2)
 
 
 {-| Create a lazy list containing all possible triples in the given lazy lists.
@@ -696,7 +708,15 @@ product3 list1 list2 list3 =
                     Nil
 
                 Cons first1 rest1 ->
-                    force <| map (\( b, c ) -> ( first1, b, c )) (product2 list2 list3) +++ product3 rest1 list2 list3
+                    force <|
+                        append
+                            (map
+                                (\( b, c ) ->
+                                    ( first1, b, c )
+                                )
+                                (product2 list2 list3)
+                            )
+                            (product3 rest1 list2 list3)
 
 
 {-| Create a lazy list containing all possible 4-tuples in the given lazy lists.
@@ -710,7 +730,15 @@ product4 list1 list2 list3 list4 =
                     Nil
 
                 Cons first1 rest1 ->
-                    force <| map (\( b, c, d ) -> ( first1, b, c, d )) (product3 list2 list3 list4) +++ product4 rest1 list2 list3 list4
+                    force <|
+                        append
+                            (map
+                                (\( b, c, d ) ->
+                                    ( first1, b, c, d )
+                                )
+                                (product3 list2 list3 list4)
+                            )
+                            (product4 rest1 list2 list3 list4)
 
 
 {-| Create a lazy list containing all possible 5-tuples in the given lazy lists.
@@ -724,7 +752,15 @@ product5 list1 list2 list3 list4 list5 =
                     Nil
 
                 Cons first1 rest1 ->
-                    force <| map (\( b, c, d, e ) -> ( first1, b, c, d, e )) (product4 list2 list3 list4 list5) +++ product5 rest1 list2 list3 list4 list5
+                    force <|
+                        append
+                            (map
+                                (\( b, c, d, e ) ->
+                                    ( first1, b, c, d, e )
+                                )
+                                (product4 list2 list3 list4 list5)
+                            )
+                            (product5 rest1 list2 list3 list4 list5)
 
 
 {-| Convert a lazy list to a normal list.
@@ -763,29 +799,3 @@ toArray list =
 fromArray : Array a -> LazyList a
 fromArray =
     Array.foldr cons empty
-
-
-
----------------------
--- INFIX OPERATORS --
----------------------
-
-
-infixr 5 :::
-
-
-{-| Alias for `cons`. Analogous to `::` for lists.
--}
-(:::) : a -> LazyList a -> LazyList a
-(:::) =
-    cons
-
-
-infixr 5 +++
-
-
-{-| Alias for `append`. Analogous to `++` for lists.
--}
-(+++) : LazyList a -> LazyList a -> LazyList a
-(+++) =
-    append
