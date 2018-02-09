@@ -186,7 +186,7 @@ append list1 list2 =
                     force list2
 
                 Cons first rest ->
-                    force (cons first <| append rest list2)
+                    Cons first (append rest list2)
 
 
 {-| Interleave the elements of a list in another list. The two lists get
@@ -206,7 +206,10 @@ interleave list1 list2 =
                             force list1
 
                         Cons first2 rest2 ->
-                            force (cons first1 <| cons first2 <| interleave rest1 rest2)
+                            interleave rest1 rest2
+                                |> cons first2
+                                |> cons first1
+                                |> force
 
 
 {-| Places the given value between all members of the given list.
@@ -222,23 +225,24 @@ intersperse a list =
                 Cons first rest ->
                     case force rest of
                         Nil ->
-                            force (cons first empty)
+                            Cons first empty
 
                         Cons second tail ->
                             case force tail of
                                 Nil ->
-                                    force <|
-                                        cons first <|
-                                            cons a <|
-                                                cons second empty
+                                    empty
+                                        |> cons second
+                                        |> cons a
+                                        |> cons first
+                                        |> force
 
                                 _ ->
-                                    force <|
-                                        cons first <|
-                                            cons a <|
-                                                cons second <|
-                                                    cons a <|
-                                                        intersperse a tail
+                                    intersperse a tail
+                                        |> cons a
+                                        |> cons second
+                                        |> cons a
+                                        |> cons first
+                                        |> force
 
 
 {-| Take a list and repeat it ad infinitum. This cycles a finite list
