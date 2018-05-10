@@ -285,6 +285,7 @@ take n list =
         \() ->
             if n <= 0 then
                 Nil
+
             else
                 case force list of
                     Nil ->
@@ -307,6 +308,7 @@ takeWhile predicate list =
                 Cons first rest ->
                     if predicate first then
                         Cons first (takeWhile predicate rest)
+
                     else
                         Nil
 
@@ -319,6 +321,7 @@ drop n list =
         dropHelper n list =
             if n <= 0 then
                 force list
+
             else
                 case force list of
                     Nil ->
@@ -345,6 +348,7 @@ dropWhile predicate list =
                 Cons first rest ->
                     if predicate first then
                         dropHelper rest
+
                     else
                         Cons first rest
     in
@@ -388,6 +392,7 @@ unique list =
                 Cons first rest ->
                     if member first rest then
                         uniqueHelper rest
+
                     else
                         Cons first (unique rest)
     in
@@ -409,6 +414,7 @@ keepIf predicate list =
                 Cons first rest ->
                     if predicate first then
                         Cons first (keepIf predicate rest)
+
                     else
                         force (keepIf predicate rest)
 
@@ -645,25 +651,25 @@ map5 f list1 list2 list3 list4 list5 =
 {-| -}
 zip : LazyList a -> LazyList b -> LazyList ( a, b )
 zip =
-    map2 (,)
+    map2 (\a b -> ( a, b ))
 
 
 {-| -}
 zip3 : LazyList a -> LazyList b -> LazyList c -> LazyList ( a, b, c )
 zip3 =
-    map3 (,,)
+    map3 (\a b c -> ( a, b, c ))
 
 
 {-| -}
 zip4 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList ( a, b, c, d )
 zip4 =
-    map4 (,,,)
+    map4 (\a b c d -> ( a, b, c, d ))
 
 
 {-| -}
 zip5 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList e -> LazyList ( a, b, c, d, e )
 zip5 =
-    map5 (,,,,)
+    map5 (\a b c d e -> ( a, b, c, d, e ))
 
 
 {-| Create a lazy list containing all possible pairs in the given lazy lists.
@@ -682,7 +688,7 @@ product2 list1 list2 =
                             Nil
 
                         Cons _ _ ->
-                            force <| map ((,) first1) list2 +++ product2 rest1 list2
+                            force <| map (\b -> ( first1, b )) list2 +++ product2 rest1 list2
 
 
 {-| Create a lazy list containing all possible triples in the given lazy lists.
