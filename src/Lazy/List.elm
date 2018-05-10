@@ -1,4 +1,55 @@
-module Lazy.List exposing (..)
+module Lazy.List
+    exposing
+        ( LazyList
+        , LazyListView(..)
+        , andMap
+        , andThen
+        , append
+        , cons
+        , cycle
+        , drop
+        , dropIf
+        , dropWhile
+        , empty
+        , filterMap
+        , flatten
+        , foldl
+        , foldr
+        , fromArray
+        , fromList
+        , head
+        , headAndTail
+        , interleave
+        , intersperse
+        , isEmpty
+        , iterate
+        , keepIf
+        , length
+        , map
+        , map2
+        , map3
+        , map4
+        , map5
+        , member
+        , numbers
+        , product
+        , product2
+        , product3
+        , reduce
+        , repeat
+        , reverse
+        , singleton
+        , sum
+        , tail
+        , take
+        , takeWhile
+        , toArray
+        , toList
+        , unique
+        , zip
+        , zip2
+        , zip3
+        )
 
 {-| Lazy list implementation in Elm.
 
@@ -55,7 +106,7 @@ module Lazy.List exposing (..)
 
 # All the zips!
 
-@docs zip3, zip4, zip5
+@docs zip2, zip3
 
 
 # All the Cartesian products!
@@ -63,12 +114,7 @@ module Lazy.List exposing (..)
 **Warning:** Calling these functions on large lists and then calling `toList` can easily overflow the stack. Consider
 passing the results to `take aConstantNumber`.
 
-@docs product2, product3, product4, product5
-
-
-# Infix Operators
-
-@docs (:::), (+++)
+@docs product2, product3
 
 -}
 
@@ -191,7 +237,7 @@ append list1 list2 =
                     force list2
 
                 Cons first rest ->
-                    force (first ::: rest +++ list2)
+                    force (append rest list2 |> cons first)
 
 
 {-| Interleave the elements of a list in another list. The two lists get
@@ -211,7 +257,7 @@ interleave list1 list2 =
                             force list1
 
                         Cons first2 rest2 ->
-                            force (first1 ::: first2 ::: interleave rest1 rest2)
+                            force (cons first1 (cons first2 (interleave rest1 rest2)))
 
 
 {-| Places the given value between all members of the given list.
@@ -227,15 +273,15 @@ intersperse a list =
                 Cons first rest ->
                     case force rest of
                         Nil ->
-                            force (first ::: empty)
+                            force (cons first empty)
 
-                        Cons second tail ->
-                            case force tail of
+                        Cons second innerRest ->
+                            case force innerRest of
                                 Nil ->
-                                    force (first ::: a ::: second ::: empty)
+                                    force (cons first (cons a (cons second empty)))
 
                                 _ ->
-                                    force (first ::: a ::: second ::: a ::: intersperse a tail)
+                                    force (cons first (cons a (cons second (cons a (intersperse a innerRest)))))
 
 
 {-| Take a list and repeat it ad infinitum. This cycles a finite list
@@ -244,11 +290,11 @@ the case of an infinite list.
 -}
 cycle : LazyList a -> LazyList a
 cycle list =
-    list
-        +++ (lazy <|
-                \() ->
-                    force (cycle list)
-            )
+    append list
+        (lazy <|
+            \() ->
+                force (cycle list)
+        )
 
 
 {-| Create an infinite list of applications of a function on some value.
@@ -318,17 +364,17 @@ takeWhile predicate list =
 drop : Int -> LazyList a -> LazyList a
 drop n list =
     let
-        dropHelper n list =
-            if n <= 0 then
-                force list
+        dropHelper m xs =
+            if m <= 0 then
+                force xs
 
             else
-                case force list of
+                case force xs of
                     Nil ->
                         Nil
 
                     Cons first rest ->
-                        dropHelper (n - 1) rest
+                        dropHelper (m - 1) rest
     in
     lazy <|
         \() ->
@@ -340,21 +386,21 @@ drop n list =
 dropWhile : (a -> Bool) -> LazyList a -> LazyList a
 dropWhile predicate list =
     let
-        dropHelper list =
-            case force list of
+        dropWhileHelper xs =
+            case force xs of
                 Nil ->
                     Nil
 
                 Cons first rest ->
                     if predicate first then
-                        dropHelper rest
+                        dropWhileHelper rest
 
                     else
                         Cons first rest
     in
     lazy <|
         \() ->
-            dropHelper list
+            dropWhileHelper list
 
 
 {-| Test if a value is a member of a list.
@@ -384,8 +430,8 @@ length =
 unique : LazyList a -> LazyList a
 unique list =
     let
-        uniqueHelper list =
-            case force list of
+        uniqueHelper xs =
+            case force xs of
                 Nil ->
                     Nil
 
@@ -502,7 +548,7 @@ flatten list =
                     Nil
 
                 Cons first rest ->
-                    force (first +++ flatten rest)
+                    force (append first (flatten rest))
 
 
 {-| Chain list producing operations. Map then flatten.
@@ -655,21 +701,15 @@ zip =
 
 
 {-| -}
+zip2 : LazyList a -> LazyList b -> LazyList ( a, b )
+zip2 =
+    map2 (\a b -> ( a, b ))
+
+
+{-| -}
 zip3 : LazyList a -> LazyList b -> LazyList c -> LazyList ( a, b, c )
 zip3 =
     map3 (\a b c -> ( a, b, c ))
-
-
-{-| -}
-zip4 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList ( a, b, c, d )
-zip4 =
-    map4 (\a b c d -> ( a, b, c, d ))
-
-
-{-| -}
-zip5 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList e -> LazyList ( a, b, c, d, e )
-zip5 =
-    map5 (\a b c d e -> ( a, b, c, d, e ))
 
 
 {-| Create a lazy list containing all possible pairs in the given lazy lists.
@@ -688,7 +728,7 @@ product2 list1 list2 =
                             Nil
 
                         Cons _ _ ->
-                            force <| map (\b -> ( first1, b )) list2 +++ product2 rest1 list2
+                            force <| append (map (\b -> ( first1, b )) list2) (product2 rest1 list2)
 
 
 {-| Create a lazy list containing all possible triples in the given lazy lists.
@@ -702,35 +742,7 @@ product3 list1 list2 list3 =
                     Nil
 
                 Cons first1 rest1 ->
-                    force <| map (\( b, c ) -> ( first1, b, c )) (product2 list2 list3) +++ product3 rest1 list2 list3
-
-
-{-| Create a lazy list containing all possible 4-tuples in the given lazy lists.
--}
-product4 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList ( a, b, c, d )
-product4 list1 list2 list3 list4 =
-    lazy <|
-        \() ->
-            case force list1 of
-                Nil ->
-                    Nil
-
-                Cons first1 rest1 ->
-                    force <| map (\( b, c, d ) -> ( first1, b, c, d )) (product3 list2 list3 list4) +++ product4 rest1 list2 list3 list4
-
-
-{-| Create a lazy list containing all possible 5-tuples in the given lazy lists.
--}
-product5 : LazyList a -> LazyList b -> LazyList c -> LazyList d -> LazyList e -> LazyList ( a, b, c, d, e )
-product5 list1 list2 list3 list4 list5 =
-    lazy <|
-        \() ->
-            case force list1 of
-                Nil ->
-                    Nil
-
-                Cons first1 rest1 ->
-                    force <| map (\( b, c, d, e ) -> ( first1, b, c, d, e )) (product4 list2 list3 list4 list5) +++ product5 rest1 list2 list3 list4 list5
+                    force <| append (map (\( b, c ) -> ( first1, b, c )) (product2 list2 list3)) (product3 rest1 list2 list3)
 
 
 {-| Convert a lazy list to a normal list.
@@ -769,29 +781,3 @@ toArray list =
 fromArray : Array a -> LazyList a
 fromArray =
     Array.foldr cons empty
-
-
-
----------------------
--- INFIX OPERATORS --
----------------------
-
-
-infixr 5 :::
-
-
-{-| Alias for `cons`. Analogous to `::` for lists.
--}
-(:::) : a -> LazyList a -> LazyList a
-(:::) =
-    cons
-
-
-infixr 5 +++
-
-
-{-| Alias for `append`. Analogous to `++` for lists.
--}
-(+++) : LazyList a -> LazyList a -> LazyList a
-(+++) =
-    append
